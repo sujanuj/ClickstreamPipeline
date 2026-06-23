@@ -52,6 +52,21 @@ CREATE TABLE IF NOT EXISTS speed_counts (
 CREATE INDEX IF NOT EXISTS idx_speed_counts_window ON speed_counts (window_start);
 """
 
+CREATE_BATCH_COUNTS_TABLE = """
+CREATE TABLE IF NOT EXISTS batch_counts (
+    id                   BIGSERIAL PRIMARY KEY,
+    user_id              TEXT NOT NULL,
+    event_type           TEXT NOT NULL,
+    window_start         TIMESTAMPTZ NOT NULL,
+    window_end           TIMESTAMPTZ NOT NULL,
+    event_count          INTEGER NOT NULL DEFAULT 0,
+    computed_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (user_id, event_type, window_start)
+);
+
+CREATE INDEX IF NOT EXISTS idx_batch_counts_window ON batch_counts (window_start);
+"""
+
 
 def init_db():
     conn = get_connection()
@@ -59,8 +74,9 @@ def init_db():
         with conn.cursor() as cur:
             cur.execute(CREATE_RAW_EVENTS_TABLE)
             cur.execute(CREATE_SPEED_COUNTS_TABLE)
+            cur.execute(CREATE_BATCH_COUNTS_TABLE)
         conn.commit()
-        print("✅ Database schema ready (raw_events, speed_counts tables)")
+        print("✅ Database schema ready (raw_events, speed_counts, batch_counts tables)")
     finally:
         conn.close()
 
